@@ -8,8 +8,7 @@ from datos import (
     generar_inverso
 )
 
-# Carpeta de graficas, anclada a la ubicacion de este archivo (no al
-# directorio desde el que se ejecute el script). Se crea si no existe.
+# Para que se guarden las graficas en la carpeta "graficas" dentro del directorio actual
 GRAFICAS_DIR = Path(__file__).resolve().parent / "graficas"
 GRAFICAS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -90,8 +89,6 @@ def graficar_tiempo(tamanios: list[int], resultados: dict[str, dict[str, list]])
     plt.close()
 
 if __name__ == "__main__":
-    import os
-    print(os.getcwd())
     tamanios = [100, 200, 400, 800, 1600, 3200, 6400]
     resultados = medir(tamanios)
     graficar_comparaciones(tamanios,resultados)
