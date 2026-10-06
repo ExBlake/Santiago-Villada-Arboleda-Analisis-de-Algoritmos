@@ -45,7 +45,7 @@
 - Las funciones de los dos algoritmos y de los generadores tienen type hints y docstring.
 
 **Lo que puede mejorar:**
-- Hay varias faltas de PEP 8: líneas con espacios, falta de líneas en blanco entre funciones, archivos sin salto de línea final, líneas largas en `parte4_complejidad.py`.
+- Hay varias faltas de PEP 8: faltan líneas en blanco entre funciones y hay líneas largas en `parte4_complejidad.py`.
 - Las funciones de `parte3_casos.py` y `parte4_complejidad.py` tienen docstring incompleto (sin `Args`/`Returns` en las gráficas) y `medir` no tipa el parámetro `algoritmo`.
 - El sentido de orden (ascendente) no se declara, aunque Tamiza pide de mayor a menor.
 
