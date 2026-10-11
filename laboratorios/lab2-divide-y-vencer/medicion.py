@@ -21,7 +21,6 @@ def generar_entradas(n: int) -> list[int]:
     entrada = [random.randint(-100, 100) for _ in range(n)]
     return entrada
 
-
 def graficar_tiempo(
     tamanios: list[int],
     tiempos_dividir_vencer: list[float],
