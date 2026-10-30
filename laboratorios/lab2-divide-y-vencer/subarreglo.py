@@ -34,7 +34,9 @@ def subarreglo_fuerza_bruta(valores: list[float]) -> tuple[int, int, float]:
 
     return mejor_inicio, mejor_fin, suma_maxima
 
-def suma_cruzada(valores: list[float], inicio: int, medio: int, fin: int
+
+def suma_cruzada(
+    valores: list[float], inicio: int, medio: int, fin: int
 ) -> tuple[int, int, float]:
     """
     Encuentra el mejor tramo que cruza el punto medio.
@@ -75,7 +77,8 @@ def suma_cruzada(valores: list[float], inicio: int, medio: int, fin: int
     return mejor_izquierda, mejor_derecha, suma_total
 
 
-def subarreglo_maximo(valores: list[float], inicio: int, fin: int
+def subarreglo_maximo(
+    valores: list[float], inicio: int, fin: int
 ) -> tuple[int, int, float]:
     """
     Encuentra la mejor racha por divide y venceras.
@@ -108,4 +111,3 @@ def subarreglo_maximo(valores: list[float], inicio: int, fin: int
     if suma_der >= suma_izq and suma_der >= suma_cruz:
         return inicio_der, fin_der, suma_der
     return inicio_cruz, fin_cruz, suma_cruz
-    

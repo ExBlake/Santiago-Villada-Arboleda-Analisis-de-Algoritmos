@@ -8,11 +8,11 @@ Desde la raíz del repositorio activo el entorno virtual (con `matplotlib` insta
 
 ```bash
 # Windows
-.venv\Scripts\activate
+env\Scripts\activate
 # Mac / Linux
-source .venv/bin/activate
+source env/bin/activate
 
-cd lab2-divide-y-vencer
+cd laboratorios/lab2-divide-y-vencer
 python pruebas.py     # pruebas de las dos soluciones
 python medicion.py    # medición de tiempos y gráfica
 ```
@@ -37,17 +37,19 @@ Código: [`medicion.py`](medicion.py).
 
 ![Tiempo de ejecución vs tamaño de entrada](graficas/tiempo_vs_n.png)
 
-**Cómo medí:** usé la semilla 42, enteros entre -100 y 100, y la misma lista para ambos algoritmos en cada tamaño. Cronometré solo la llamada al algoritmo con `time.perf_counter()` y medí **una sola vez por tamaño**, así que hay algo de ruido del computador. En cada tamaño el programa verifica con `assert` que ambas sumas coinciden.
+**Cómo medí:** usé la semilla 42, enteros entre -100 y 100, y la misma lista para ambos algoritmos en cada tamaño. Cronometré solo la llamada al algoritmo con `time.perf_counter()`. Para que el ruido del computador no me dañara los resultados, cada algoritmo lo corrí **10 veces por tamaño y usé el promedio**. En cada tamaño el programa verifica con `assert` que ambas sumas coinciden.
+
+Esta tabla y la gráfica de arriba salen de **la misma corrida** de `medicion.py`, o sea que los números son los mismos que se ven en la imagen:
 
 | n | Dividir y vencer (s) | Fuerza bruta (s) |
 |---:|---:|---:|
-| 10 | 0,000031 | 0,000004 |
-| 50 | 0,000043 | 0,000071 |
-| 100 | 0,000077 | 0,000127 |
-| 500 | 0,000444 | 0,003982 |
-| 1000 | 0,000937 | 0,016730 |
-| 2000 | 0,001913 | 0,067421 |
-| 4000 | 0,004008 | 0,279497 |
+| 10 | 0,000009 | 0,000004 |
+| 50 | 0,000047 | 0,000052 |
+| 100 | 0,000096 | 0,000190 |
+| 500 | 0,000567 | 0,005366 |
+| 1000 | 0,001199 | 0,021615 |
+| 2000 | 0,002557 | 0,086237 |
+| 4000 | 0,005252 | 0,347778 |
 
 ## Parte 3 — Análisis
 
@@ -57,17 +59,21 @@ Mi algoritmo `subarreglo_maximo` divide la lista en dos partes, por lo que resue
 
 La recurrencia queda así: T(n) = 2T(n/2) + n. Según el método maestro, a = 2 (dos subproblemas) y b = 2 (cada uno es la mitad). El trabajo adicional crece al mismo ritmo que n^log₂2 = n, así que se cumple la condición del caso 2 y el resultado es Θ(n log n).
 
+**Caso base:** cuando la lista queda de un solo elemento (`inicio == fin`), el algoritmo no divide más y simplemente devuelve ese elemento, así que cuesta una cantidad constante de operaciones: T(1) = Θ(1). Eso es lo que hace que la recursión se detenga, y como hay n hojas (una por cada elemento), todas juntas suman Θ(n), que no cambia el resultado final.
+
+**¿Por qué sale exactamente Θ(n log n)?** En el caso 2 del método maestro, cuando f(n) es del mismo orden que n^log_b a, el resultado es T(n) = Θ(n^log_b a · log n). La idea es que el trabajo está repartido parejo en todos los niveles de la recursión: en cada nivel, entre todas las llamadas, `suma_cruzada` recorre en total unos n elementos, y como la lista se parte a la mitad cada vez, hay log₂ n niveles hasta llegar a listas de un elemento. Entonces es n de trabajo por cada uno de los log n niveles, o sea, n · log n. Por eso no queda en Θ(n), sino que aparece ese factor log n de más.
+
 La fuerza bruta es Θ(n²) porque prueba las combinaciones posibles de inicio y final del subarreglo. Aunque suma de forma acumulativa, hay cerca de nxn/2 combinaciones, y eso crece con el cuadrado del tamaño de la lista.
  
 ### 2. Lo medido contra lo esperado
  
-En la gráfica, la fuerza bruta se dispara hacia arriba, cada vez más empinada: con 4000 datos está en unos 0,28 s. La de dividir y vencer sube muy suave, casi pegada abajo: con 4000 marca unos 0,004 s, casi nada, unas 70 veces menos.
+En la gráfica, la fuerza bruta se dispara hacia arriba, cada vez más empinada: con 4000 datos está en unos 0,35 s. La de dividir y vencer sube muy suave, casi pegada abajo: con 4000 marca unos 0,005 s, casi nada, unas 66 veces menos.
  
-Tomé el paso de 2.000 a 4.000 elementos, donde el tamaño de la entrada se duplica. La fuerza bruta pasó de 0,067 s a 0,279 s, multiplicándose aproximadamente por 4,15, mientras que dividir y vencerás pasó de 0,0019 s a 0,0040 s, con un crecimiento cercano al doble (aproximadamente 2,10 según la medición). Esto se acerca a lo esperado: con una complejidad de Θ(n²), el tiempo puede multiplicarse por 4 al duplicar la entrada, mientras que con Θ(n log n) crece un poco más del doble, alrededor de 2,2 veces. Entonces, los resultados sí van de acuerdo con la teoría. Las pequeñas diferencias son normales, ya que hice una sola medición por tamaño y el computador también puede influir un poco en los tiempos.
+Tomé el paso de 2.000 a 4.000 elementos, donde el tamaño de la entrada se duplica. La fuerza bruta pasó de 0,086 s a 0,348 s, multiplicándose aproximadamente por 4,03, mientras que dividir y vencerás pasó de 0,0026 s a 0,0053 s, con un crecimiento cercano al doble (aproximadamente 2,05 según la medición). Esto se acerca a lo esperado: con una complejidad de Θ(n²), el tiempo puede multiplicarse por 4 al duplicar la entrada, mientras que con Θ(n log n) crece un poco más del doble, alrededor de 2,2 veces. Entonces, los resultados sí van de acuerdo con la teoría. Las pequeñas diferencias son normales; aunque ahora promedié 10 mediciones por tamaño, el computador siempre puede influir un poquito en los tiempos.
  
 ### 3. Tamaños pequeños
  
-En mis pruebas, con 10 elementos ganó la fuerza bruta (0,000004 s frente a 0,000031 s de dividir y vencerás). Pero cuando pasé a 50 elementos, dividir y vencerás empezó a ser más rápido (0,000043 s frente a 0,000071 s), y desde ahí la diferencia fue aumentando. Esto pasa porque, con listas pequeñas, las llamadas recursivas tienen un costo adicional que hace que dividir y vencerás se demore un poquito más. Pero, cuando aumenta la cantidad de datos, ese costo deja de ser tan importante y se nota la ventaja de revisar menos combinaciones.
+En mis pruebas, con 10 elementos ganó la fuerza bruta (0,000004 s frente a 0,000009 s de dividir y vencerás). Pero cuando pasé a 50 elementos, dividir y vencerás empezó a ser más rápido, aunque por muy poquito (0,000047 s frente a 0,000052 s), y desde ahí la diferencia fue aumentando: con 100 ya es casi la mitad (0,000096 s frente a 0,000190 s). Esto pasa porque, con listas pequeñas, las llamadas recursivas tienen un costo adicional que hace que dividir y vencerás se demore un poquito más. Pero, cuando aumenta la cantidad de datos, ese costo deja de ser tan importante y se nota la ventaja de revisar menos combinaciones.
  
 ### 4. ¿Cuándo conviene dividir?
  
@@ -79,9 +85,9 @@ Si se divide la lista en dos, se buscan los máximos de cada mitad y luego se co
  
 Para la cooperativa le recomendaría a la gerente usar `subarreglo_maximo` (dividir y vencerás), porque es mucho más eficiente cuando se trabaja con grandes cantidades de registros. Con unos 2.000 o 4.000 datos, ambos algoritmos pueden funcionar, pero cuando se llega a cientos de miles o millones de registros, la fuerza bruta puede tardar demasiado.
 
-**Esta seria la estimación.** Para calcularla, tomé como referencia los resultados con 4.000 elementos y los proyecté a 1.000.000. Esto significa que la cantidad de datos aumenta 250 veces (1.000.000 / 4.000 = 250), pero el tiempo no aumenta igual para los dos algoritmos.
+**Esta seria la estimación.** Para calcularla, tomé como referencia los resultados con 4.000 elementos de mi gráfica (0,348 s para la fuerza bruta y 0,0053 s para dividir y vencerás) y los proyecté a 1.000.000. Esto significa que la cantidad de datos aumenta 250 veces (1.000.000 / 4.000 = 250), pero el tiempo no aumenta igual para los dos algoritmos.
 
-- **Fuerza bruta:** como su tiempo crece aproximadamente con \(n^2\), el aumento sería de 250 × 250 = 62.500 veces. Entonces, 0,28 segundos × 62.500 da unos 17.500 segundos, es decir, cerca de **4,9 horas**.
-- **Dividir y vencerás:** crece con n log n, o sea un poquito más que los datos por el logaritmo, que pasa de más o menos 12 a más o menos 20 (un factor de 1,67). Entonces aumenta unas 250 × 1,67 ≈ 417 veces, y 0,004 s × 417 da aproximadamente **1,7 segundos**.
+- **Fuerza bruta:** como su tiempo crece aproximadamente con \(n^2\), el aumento sería de 250 × 250 = 62.500 veces. Entonces, 0,348 segundos × 62.500 da unos 21.700 segundos, es decir, cerca de **6 horas**.
+- **Dividir y vencerás:** crece con n log n, o sea un poquito más que los datos por el logaritmo, que pasa de más o menos 12 a más o menos 20 (un factor de 1,67). Entonces aumenta unas 250 × 1,67 ≈ 417 veces, y 0,0053 s × 417 da aproximadamente **2,2 segundos**.
 
 Los tiempos reales pueden variar según el computador y las condiciones de ejecución, pero la diferencia estimada es bastante clara: **horas frente a unos pocos segundos**. Por eso, dividir y vencerás sería la mejor opción para trabajar con grandes volúmenes de información.

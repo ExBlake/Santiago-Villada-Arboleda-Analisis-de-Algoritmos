@@ -1,3 +1,12 @@
+"""Medicion de tiempos: fuerza bruta contra divide y venceras.
+
+Mide los dos algoritmos de subarreglo.py con las mismas listas
+aleatorias (semilla 42) para varios tamanos de entrada. Cada medicion
+se repite varias veces y se usa el promedio. Imprime la tabla de
+tiempos y genera la grafica graficas/tiempo_vs_n.png con los mismos
+datos de esa corrida.
+"""
+
 import random
 import time
 import os
@@ -5,6 +14,8 @@ import os
 import matplotlib.pyplot as plt
 
 from subarreglo import subarreglo_fuerza_bruta, subarreglo_maximo
+
+REPETICIONES = 10
 
 
 def generar_entradas(n: int) -> list[int]:
@@ -21,6 +32,7 @@ def generar_entradas(n: int) -> list[int]:
     entrada = [random.randint(-100, 100) for _ in range(n)]
     return entrada
 
+
 def graficar_tiempo(
     tamanios: list[int],
     tiempos_dividir_vencer: list[float],
@@ -28,7 +40,7 @@ def graficar_tiempo(
 ) -> None:
     """
     Grafica los tiempos de ejecucion de ambos algoritmos.
-    
+
     Args:
         tamanios: tamaños de entrada medidos.
         tiempos_dividir_vencer: tiempos de divide y venceras, en segundos.
@@ -45,12 +57,13 @@ def graficar_tiempo(
     plt.ylabel("Tiempo de ejecución (s)")
     plt.legend()
     plt.grid(True)
-    
+
     carpeta = os.path.dirname(os.path.abspath(__file__))
     carpeta_graficas = os.path.join(carpeta, "graficas")
     os.makedirs(carpeta_graficas, exist_ok=True)
     plt.savefig(os.path.join(carpeta_graficas, "tiempo_vs_n.png"))
     plt.close()
+
 
 if __name__ == "__main__":
 
@@ -63,30 +76,36 @@ if __name__ == "__main__":
     for tamanio in tamanios:
         entrada = generar_entradas(tamanio)
 
-        # Medir el tiempo de divide y venceras.
-        inicio_reloj = time.perf_counter()
-        resultado_dividir_vencer = subarreglo_maximo(
-            entrada, 0, len(entrada) - 1
-        )
-        fin_reloj = time.perf_counter()
-        tiempos_dividir_vencer.append(fin_reloj - inicio_reloj)
+        # Medir el tiempo de divide y venceras (promedio de varias veces).
+        mediciones = []
+        for _ in range(REPETICIONES):
+            inicio_reloj = time.perf_counter()
+            resultado_dividir_vencer = subarreglo_maximo(
+                entrada, 0, len(entrada) - 1
+            )
+            fin_reloj = time.perf_counter()
+            mediciones.append(fin_reloj - inicio_reloj)
+        tiempos_dividir_vencer.append(sum(mediciones) / REPETICIONES)
 
-        # Medir el tiempo de fuerza bruta.
-        inicio_reloj = time.perf_counter()
-        resultado_fuerza_bruta = subarreglo_fuerza_bruta(entrada)
-        fin_reloj = time.perf_counter()
-        tiempos_fuerza_bruta.append(fin_reloj - inicio_reloj)
+        # Medir el tiempo de fuerza bruta (promedio de varias veces).
+        mediciones = []
+        for _ in range(REPETICIONES):
+            inicio_reloj = time.perf_counter()
+            resultado_fuerza_bruta = subarreglo_fuerza_bruta(entrada)
+            fin_reloj = time.perf_counter()
+            mediciones.append(fin_reloj - inicio_reloj)
+        tiempos_fuerza_bruta.append(sum(mediciones) / REPETICIONES)
 
         assert resultado_dividir_vencer[2] == resultado_fuerza_bruta[2]
 
         print("Tamaño de entrada:", tamanio)
         print("Suma máxima:", resultado_dividir_vencer[2])
-        print("Tiempo dividir y vencer: ", tiempos_dividir_vencer[-1], " segundos")
+        print("Tiempo dividir y vencer: ",
+              tiempos_dividir_vencer[-1], " segundos")
         print("Tiempo fuerza bruta: ", tiempos_fuerza_bruta[-1], " segundos")
         print("Las sumas de ambos algoritmos coinciden")
 
-
-    print("\nResumen de tiempos:")
+    print(f"\nResumen de tiempos (promedio de {REPETICIONES} repeticiones):")
     print("Tamaño | Dividir y vencer (s) | Fuerza bruta (s)")
     for i in range(len(tamanios)):
         print(
