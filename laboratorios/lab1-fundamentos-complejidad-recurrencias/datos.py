@@ -1,4 +1,6 @@
 import random
+
+
 def generar_aleatorio(n: int, semilla: int = 42) -> list[int]:
     """Genera un lote de n registros en orden aleatorio (escenario A).
 
@@ -14,7 +16,8 @@ def generar_aleatorio(n: int, semilla: int = 42) -> list[int]:
     lote = list(range(n))
     generador.shuffle(lote)
     return lote
- 
+
+
 def generar_casi_ordenado(n: int, semilla: int = 42) -> list[int]:
     """Genera un lote casi ordenado: 98% ordenado y 2% al final (escenario B).
 
@@ -29,11 +32,11 @@ def generar_casi_ordenado(n: int, semilla: int = 42) -> list[int]:
     """
     generador = random.Random(semilla)
     corte = int(n * 0.98)
- 
+
     ordenado = list(range(corte))
     restante = list(range(corte, n))
     generador.shuffle(restante)
- 
+
     return ordenado + restante
 
 

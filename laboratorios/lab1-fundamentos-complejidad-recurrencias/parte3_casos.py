@@ -8,9 +8,11 @@ from datos import (
     generar_inverso
 )
 
-# Para que se guarden las graficas en la carpeta "graficas" dentro del directorio actual
+# Para que se guarden las graficas en la carpeta "graficas"
+# dentro del directorio del laboratorio
 GRAFICAS_DIR = Path(__file__).resolve().parent / "graficas"
 GRAFICAS_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def medir(tamanios: list[int]) -> dict[str, dict[str, list]]:
     """
@@ -54,9 +56,21 @@ def medir(tamanios: list[int]) -> dict[str, dict[str, list]]:
             resultados[tipo]["comparaciones"].append(comparaciones)
     return resultados
 
-def graficar_comparaciones(tamanios: list[int], resultados: dict[str, dict[str, list]]) -> None:
+
+def graficar_comparaciones(
+    tamanios: list[int],
+    resultados: dict[str, dict[str, list]]
+) -> None:
     """
     Grafica comparaciones vs n para cada escenario.
+
+    Args:
+        tamanios: lista con los tamaños de las entradas medidas.
+        resultados: diccionario devuelto por medir, con los tiempos y
+            comparaciones de cada escenario.
+
+    Returns:
+        None. La grafica se guarda en graficas/parte3_comparaciones.png.
     """
 
     plt.figure()
@@ -72,9 +86,20 @@ def graficar_comparaciones(tamanios: list[int], resultados: dict[str, dict[str, 
     plt.close()
 
 
-def graficar_tiempo(tamanios: list[int], resultados: dict[str, dict[str, list]]) -> None:
+def graficar_tiempo(
+    tamanios: list[int],
+    resultados: dict[str, dict[str, list]]
+) -> None:
     """
     Grafica tiempo vs n para cada escenario.
+
+    Args:
+        tamanios: lista con los tamaños de las entradas medidas.
+        resultados: diccionario devuelto por medir, con los tiempos y
+            comparaciones de cada escenario.
+
+    Returns:
+        None. La grafica se guarda en graficas/parte3_tiempo.png.
     """
 
     plt.figure()
@@ -88,8 +113,9 @@ def graficar_tiempo(tamanios: list[int], resultados: dict[str, dict[str, list]])
     plt.savefig(GRAFICAS_DIR / "parte3_tiempo.png")
     plt.close()
 
+
 if __name__ == "__main__":
     tamanios = [100, 200, 400, 800, 1600, 3200, 6400]
     resultados = medir(tamanios)
-    graficar_comparaciones(tamanios,resultados)
-    graficar_tiempo(tamanios,resultados)
+    graficar_comparaciones(tamanios, resultados)
+    graficar_tiempo(tamanios, resultados)

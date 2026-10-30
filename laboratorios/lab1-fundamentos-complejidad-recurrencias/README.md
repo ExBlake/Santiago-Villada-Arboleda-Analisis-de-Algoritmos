@@ -1,5 +1,35 @@
 # Laboratorio evaluativo 1. Fundamentos, complejidad y recurrencias
 
+**Autor:** SANTIAGO VILLADA ARBOLEDA
+
+## Cómo reproducir el experimento
+
+Desde la raíz del repositorio activo el entorno virtual (con `matplotlib` instalado, ver `requirements.txt`) y entro a la carpeta del laboratorio:
+
+```bash
+# Windows
+env\Scripts\activate
+# Mac / Linux
+source env/bin/activate
+
+pip install -r requirements.txt
+
+cd laboratorios/lab1-fundamentos-complejidad-recurrencias
+python parte3_casos.py        # Parte 3: genera graficas/parte3_comparaciones.png y graficas/parte3_tiempo.png
+python parte4_complejidad.py  # Parte 4: genera graficas/parte4_tiempo.png e imprime los tiempos medidos
+```
+
+Las gráficas siempre quedan guardadas en la carpeta [graficas/](graficas/) de este laboratorio. Los datos los genero con una semilla fija (`42`), entonces cada vez que se corre salen los mismos lotes; lo único que puede cambiar un poquito son los tiempos, dependiendo del computador.
+
+**Código del laboratorio:**
+
+- [algoritmos.py](algoritmos.py): aquí están `insertion_sort` y `merge_sort`, y los dos cuentan las comparaciones entre elementos.
+- [datos.py](datos.py): aquí están los generadores de los escenarios A (aleatorio), B (casi ordenado) y C (inverso).
+- [parte3_casos.py](parte3_casos.py): la medición y las gráficas de la Parte 3.
+- [parte4_complejidad.py](parte4_complejidad.py): la medición y la gráfica de la Parte 4.
+
+**Sentido del orden:** quiero aclarar que mis dos algoritmos ordenan de forma **ascendente**, o sea, de menor a mayor índice de riesgo. Como Tamiza necesita la lista de **mayor a menor**, en producción solo habría que darle la vuelta al resultado (`ordenada[::-1]`). Eso cuesta Θ(n) extra, pero no cambia ni el número de comparaciones ni la complejidad de ninguno de los dos.
+
 ## Parte 1. Analizar el algoritmo antes de comprar hardware
 
 Antes de comprar un servidor con el doble de velocidad, es necesario analizar primero el algoritmo que utiliza actualmente Tamiza. El hecho de que **insertion sort** lleve ocho años funcionando y entregue correctamente los registros no significa que siga siendo adecuado para la cantidad de información que maneja actualmente la plataforma.
@@ -21,6 +51,12 @@ En el caso que propone el enunciado, se estaría intentando solucionar un proble
 
 Aunque el algoritmo encontraba correctamente los resultados, no era viable para esa situación porque incumplía la restricción de tiempo. En ese caso tampoco tendría mucho sentido depender únicamente de comprar un equipo más rápido si el algoritmo utilizado no escala bien con el aumento de información. Al final, nos dimos cuenta de que era un problema del algoritmo, ya que tenía mucha redundancia y una mala codificación, por eso es importante revisar el algoritmo y los recursos que usa.
 
+**¿Por qué no escalaba?** Ya mirándolo bien, el tiempo total era básicamente *cantidad de imágenes x lo que se demoraba cada imagen*, y el problema era que cada imagen ya se demoraba demasiado, entonces cuando llegaban más imágenes el tiempo total se iba muy arriba:
+
+- **Crecía:** la cantidad de imágenes del día, que en temporada alta se duplicaba (de 1.500 a 3.000), y el tiempo total subía con ella (de unas 2 horas a unas 3 horas).
+- **Por qué cada imagen se demoraba tanto:** como dije, algunas imágenes eran borrosas o difíciles de leer, y además el código tenía mucha redundancia y mala codificación. Con 1.500 imágenes en 2 horas eran más o menos 4,8 s por imagen, y con 3.000 en 3 horas más o menos 3,6 s por imagen. Para que 3.000 imágenes salieran en menos de una hora, cada una tenía que demorarse como 1,2 s, o sea, unas 3 veces menos de lo que se demoraba.
+- **Por qué el hardware no era suficiente:** un equipo el doble de rápido solo parte el tiempo a la mitad (de 2–3 h quedaría en 1–1,5 h), y aun así no cumplía la hora. Lo que de verdad servía era corregir la redundancia y la mala codificación del algoritmo, porque eso baja justo lo que se demora cada imagen, que es lo que se multiplica por la cantidad de imágenes.
+
 Realmente considero que se debe evaluar y analizar minuciosamente el algoritmo y buscar estrategias que permitan hacer un mejor uso de los recursos del hardware. También se deben analizar otros tipos de algoritmos, como **merge sort**, que puede ser una alternativa para mejorar mucho el comportamiento del ordenamiento cuando aumenta la cantidad de datos. Por ende, Tamiza podría procesar los 1.200.000 registros dentro de la ventana de cuatro horas sin depender solamente de comprar un servidor más potente.
 
 ## Parte 2. Responsabilidad ambiental y ética de la implementación
@@ -30,6 +66,15 @@ Considero que escoger el algoritmo que va a utilizar Tamiza no es solamente una 
 ### Dimensión ambiental
 
 Mientras más tiempo tarde el proceso, más tiempo tiene que estar trabajando el servidor y, por lo tanto, **se utiliza más energía**. Puede que en una sola madrugada la diferencia no parezca tan importante, pero Tamiza realiza este proceso **todos los días**. Si durante meses o años se mantiene un algoritmo que tarda mucho más de lo necesario, ese consumo adicional se va acumulando. Por eso, mejorar el algoritmo también puede ayudar a utilizar mejor los recursos y evitar un gasto de energía que realmente se podría reducir.
+
+**Estimación aproximada.** Para ponerle números, usé los tiempos que medí en la Parte 4 (el cálculo está en la 4.3). Extrapolando, en Python y en mi computador, insertion sort se demoraría unas **8 horas** cada madrugada con 1.200.000 registros desordenados (y unas 16 horas en el peor caso), mientras que merge sort se demoraría unos **4 segundos**. Voy a suponer que el servidor consume más o menos **400 W** mientras trabaja (esto es un supuesto mío, no es un dato de Tamiza):
+
+| | Tiempo por noche (estimado) | Energía por noche | Energía al año (365 noches) |
+|---|---:|---:|---:|
+| Insertion sort (caso promedio) | ≈ 8,2 h | ≈ 3,3 kWh | ≈ 1.200 kWh |
+| Merge sort | ≈ 4 s | ≈ 0,0004 kWh | ≈ 0,15 kWh |
+
+O sea, solo por ordenar la lista se estarían gastando alrededor de **1.200 kWh al año** que se podrían ahorrar. Si uso un factor aproximado de 0,13 kg de CO₂ por kWh para la red eléctrica de Colombia, eso serían unos **150 kg de CO₂ al año**. Obviamente son cifras aproximadas, porque dependen del servidor real, del lenguaje y de cuánto gaste el equipo cuando está quieto, pero sí dejan ver qué tan grande es la diferencia.
 
 ### Dimensión ética
 
@@ -41,6 +86,12 @@ Desde el punto de vista ético, considero que el problema es todavía más impor
 ### Una tensión adicional
 
 Además, hay algo que considero todavía más importante: como Tamiza está relacionada con el sector de la salud, el ordenamiento de los datos debe ser **muy preciso**, especialmente al momento de definir qué pacientes tienen mayor prioridad. En la salud, muchas veces el tiempo puede ser muy importante e incluso puede representar una diferencia en la atención de una persona. Por eso, se debe garantizar que el ordenamiento sea correcto y preciso, para evitar que un error en el sistema pueda afectar a un paciente.
+
+Pero la verdad, la tensión no es solo que sea preciso: **el orden de la lista es el que decide a quién se llama primero**. Como el centro de contacto no alcanza a llamar a todo el mundo en un mismo día, el puesto en el que queda cada paciente termina siendo, en la práctica, una decisión de quién se atiende primero. Entonces ordenar ya no es algo puramente técnico, sino que es repartir algo que no alcanza para todos (las llamadas) entre personas. Y eso, para mí, le agrega obligaciones a la Secretaría y a nosotros, que somos los que hacemos el sistema:
+
+- **Poder explicar y revisar el orden:** cualquier paciente o funcionario debería poder saber por qué alguien quedó antes que otro (el criterio tiene que ser el índice de riesgo y nada más), y debería quedar un registro de cada lista que se genera.
+- **Manejar los empates de forma justa:** cuando dos pacientes tienen el mismo índice, el desempate no puede quedar a la suerte del algoritmo. Hay que definir un criterio (por ejemplo, quién lleva más tiempo esperando) y usar un ordenamiento estable que lo respete. Merge sort e insertion sort son estables, entonces sí mantienen ese criterio.
+- **Asegurar que la lista llegue completa y a tiempo:** si el proceso no termina dentro de la ventana, la lista puede quedar incompleta sin que nadie se dé cuenta. Por eso tiene que haber una verificación de que todos los registros quedaron ordenados y un plan B por si algo falla.
 
 ## Parte 3. Peor caso, mejor caso y caso promedio, demostrados en Python
  
@@ -79,6 +130,19 @@ Por eso considero que lo más seguro es revisar el peor escenario y comprobar qu
 ![Tiempo de ejecucion de insertion sort en los tres escenarios](graficas/parte3_tiempo.png)
  
 Al ver las gráficas, el escenario C (orden inverso) fue el que más le costó al algoritmo: entre más registros había, más se disparaba tanto el número de comparaciones como el tiempo, así que ese fue el peor caso. El escenario B (casi ordenado) fue justo lo contrario: casi no le costó trabajo sin importar cuántos registros tuviera, porque casi todo ya venía en orden. El escenario A (aleatorio) quedó siempre en un punto intermedio entre los otros dos, ni tan rápido como B ni tan lento como C.
+
+Estos son los valores que medí (son los mismos de las gráficas de arriba):
+
+| n | Comparaciones A (aleatorio) | Comparaciones B (casi ordenado) | Comparaciones C (inverso) | Tiempo A | Tiempo B | Tiempo C |
+|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 2.597 | 100 | 4.950 | 0,2 ms | < 0,1 ms | 0,4 ms |
+| 800 | 160.699 | 866 | 319.600 | 13,1 ms | 0,1 ms | 26,3 ms |
+| 3.200 | 2.591.685 | 4.172 | 5.118.400 | 0,21 s | 0,4 ms | 0,41 s |
+| 6.400 | 10.212.819 | 10.277 | 20.476.800 | 0,84 s | 1,0 ms | 1,67 s |
+
+- En **C**, las comparaciones dan exactamente n(n − 1)/2 (con n = 6.400: 6.400 · 6.399 / 2 = 20.476.800). Además, cuando duplico n de 3.200 a 6.400, tanto las comparaciones como el tiempo se multiplican casi por 4 (5,1 M → 20,5 M; 0,41 s → 1,67 s), que es justo lo que uno espera de algo cuadrático.
+- En **A**, las comparaciones son más o menos la mitad de las de C (10,2 M contra 20,5 M con n = 6.400, cerca de n²/4), y también se multiplican por casi 4 al duplicar n. O sea, sigue siendo cuadrático, solo que hace la mitad del trabajo.
+- En **B**, las comparaciones son apenas un poquito más que n (10.277 con n = 6.400) y el tiempo se queda alrededor de 1 ms. Aquí al duplicar n el trabajo solo se duplica, como pasa con algo lineal.
  
 Esto coincide exactamente con lo que se había predicho antes de hacer las pruebas: que C sería el peor caso, B el mejor y A se comportaría como algo intermedio o normal. Como el resultado no contradijo la predicción, no hay nada que explicar o justificar de forma distinta; simplemente se confirmó lo que se esperaba.
 
@@ -214,17 +278,50 @@ def insertion_sort(datos: list[int]) -> tuple[list[int], int]:
 | `for i in range(1, n)`          |                `n - 1` iteraciones | Se recorre la lista desde el segundo elemento hasta el último.        |
 | `clave = arreglo[i]`            |                            `n - 1` | Se toma una vez por cada elemento que se va a insertar.               |
 | `j = i - 1`                     |                            `n - 1` | Se ejecuta una vez por cada vuelta del `for`.                         |
-| `while j >= 0`                  |               Depende de los datos | Es la parte que más cambia según cómo estén organizados los datos.    |
-| `comparaciones += 1`            |               Depende de los datos | Cuenta cada comparación entre elementos.                              |
-| `if arreglo[j] <= clave`        |               Depende de los datos | Se revisa cada vez que se compara un elemento.                        |
-| `arreglo[j + 1] = arreglo[j]`   |               Depende de los datos | Solo se ejecuta cuando es necesario mover un elemento.                |
-| `j -= 1`                        |               Depende de los datos | Se ejecuta cada vez que el elemento debe seguir buscando su posición. |
+| `while j >= 0`                  |          `Σ (tᵢ + 1)` (como máximo) | Es la parte que más cambia según cómo estén organizados los datos.    |
+| `comparaciones += 1`            |                            `Σ cᵢ` | Cuenta cada comparación entre elementos.                              |
+| `if arreglo[j] <= clave`        |                            `Σ cᵢ` | Se revisa cada vez que se compara un elemento.                        |
+| `arreglo[j + 1] = arreglo[j]`   |                            `Σ tᵢ` | Solo se ejecuta cuando es necesario mover un elemento.                |
+| `j -= 1`                        |                            `Σ tᵢ` | Se ejecuta cada vez que el elemento debe seguir buscando su posición. |
 | `arreglo[j + 1] = clave`        |                            `n - 1` | Se coloca cada elemento en su posición.                               |
 | `return arreglo, comparaciones` |                                  1 | Se devuelve el resultado una sola vez.                                |
 
+Todas las sumas `Σ` van desde `i = 1` hasta `i = n − 1`, y uso estas dos letras:
+
+- `tᵢ` es la cantidad de elementos que toca **correr** para meter `arreglo[i]` en su lugar (o sea, los elementos de antes que son mayores que la clave). Siempre pasa que `0 ≤ tᵢ ≤ i`.
+- `cᵢ` es la cantidad de **comparaciones** en la vuelta `i`. Vale `tᵢ + 1` si el ciclo se sale por el `break`, o `tᵢ` si se sale porque `j` llegó a `−1`. En cualquier caso, `tᵢ ≤ cᵢ ≤ tᵢ + 1`.
+
+#### Sumando los costos
+
+Si digo que cada línea tiene un costo constante `c₁, c₂, …`, el tiempo total es sumar (lo que cuesta la línea × las veces que se ejecuta):
+
+```text
+T(n) = c₁·1 + c₂·1 + c₃·1                      (copia*, contador, len)
+     + c₄·(n − 1) + c₅·(n − 1) + c₆·(n − 1)    (for, clave, j = i − 1)
+     + c₇·Σ(tᵢ + 1) + c₈·Σcᵢ + c₉·Σcᵢ          (while, contador, if)
+     + c₁₀·Σtᵢ + c₁₁·Σtᵢ                       (desplazamiento, j -= 1)
+     + c₁₂·(n − 1) + c₁₃·1                     (colocar clave, return)
+```
+
+\* La copia `datos.copy()` en realidad cuesta Θ(n), pero como se hace una sola vez no cambia el resultado final.
+
+Como `cᵢ` siempre queda entre `tᵢ` y `tᵢ + 1`, todo esto se puede agrupar en dos partes:
+
+```text
+T(n) = a·n + b·Σ tᵢ + d        (a, b, d constantes positivas)
+```
+
+O sea, **insertion sort cuesta Θ(n + Σ tᵢ)**: una parte lineal que siempre está (recorrer los n − 1 elementos) más todos los desplazamientos. Lo único que depende de cómo vengan los datos es `Σ tᵢ`, que es justamente el número de **inversiones** de la entrada (las parejas de elementos que están en el orden equivocado). Con esa fórmula me salen los tres casos:
+
+| Caso | Valor de `tᵢ` | `Σ tᵢ` | `T(n)` |
+|---|---|---|---|
+| Mejor (ya ordenado) | `0` | `0` | `a·n + d = Θ(n)` |
+| Peor (orden inverso) | `i` | `1 + 2 + … + (n − 1) = n(n − 1)/2` | `a·n + b·n(n − 1)/2 + d = Θ(n²)` |
+| Promedio (aleatorio) | `i/2` en promedio | `≈ n(n − 1)/4` | `a·n + b·n(n − 1)/4 + d = Θ(n²)` |
+
 Las primeras líneas tienen un costo que no cambia demasiado aunque aumentemos la cantidad de datos. También hay varias líneas que se ejecutan una vez por cada elemento.
 
-La parte que realmente cambia el comportamiento de Insertion Sort es el `while`, porque depende de **cómo estén organizados los datos**.
+La parte que realmente cambia el comportamiento de Insertion Sort es el `while`, porque depende de **cómo estén organizados los datos**, es decir, de `Σ tᵢ`.
 
 ---
 
@@ -312,11 +409,29 @@ El caso promedio se presenta cuando los datos están desordenados, pero no compl
 
 En este caso, algunos elementos estarán cerca de su posición y otros tendrán que moverse más. Por eso el número de comparaciones y desplazamientos queda entre el mejor y el peor caso.
 
-Aunque el trabajo sea menor que en el peor caso, a medida que `n` aumenta el crecimiento sigue siendo cuadrático:
+Aunque el trabajo sea menor que en el peor caso, a medida que `n` aumenta el crecimiento sigue siendo cuadrático. Lo justifico así:
+
+1. Cuando voy a meter el elemento `arreglo[i]`, antes de él ya hay `i` elementos ordenados. Si los datos vienen en orden aleatorio, la clave puede caer con la misma probabilidad en cualquiera de las `i + 1` posiciones, entonces **en promedio es mayor que la mitad de ellos y menor que la otra mitad**.
+2. Por eso, en promedio toca correr la mitad de los elementos de antes: `tᵢ ≈ i/2`.
+3. Sumando todas las vueltas:
+
+```text
+Σ tᵢ ≈ (1/2)·(1 + 2 + … + (n − 1)) = (1/2)·n(n − 1)/2 = n(n − 1)/4
+```
+
+4. Reemplazando en `T(n) = a·n + b·Σ tᵢ + d`:
+
+```text
+T(n) ≈ a·n + b·n(n − 1)/4 + d = (b/4)·n² + …
+```
+
+El término que manda sigue siendo `n²`; lo único que cambia es la constante (`1/4` en vez del `1/2` del peor caso). Hacer la mitad del trabajo no cambia la forma en que crece, por eso:
 
 ```text
 T(n) = Θ(n²)
 ```
+
+Y esto se ve en lo que medí en la Parte 3: con n = 6.400 el escenario aleatorio hizo 10.212.819 comparaciones, muy cerca de n²/4 = 10.240.000, o sea, casi exactamente la mitad de las 20.476.800 del orden inverso.
 
 **Caso promedio: Θ(n²)**
 
@@ -338,8 +453,53 @@ Merge Sort, en cambio, mantiene **Θ(n log n)** en los tres casos, ya que siempr
 Al observar la gráfica, podemos ver que Merge Sort es mejor para Tamiza, especialmente cuando aumenta la cantidad de registros. En tamaños pequeños la diferencia entre los dos algoritmos no es tan grande, pero a medida que aumenta el tamaño de la entrada, Insertion Sort crece mucho más rápido, mientras que Merge Sort mantiene una curva más controlada. Esto es importante para Tamiza porque debe procesar alrededor de 1.200.000 registros de pacientes dentro de una ventana de cuatro horas, por lo que utilizar un algoritmo que tenga un mejor comportamiento cuando aumentan los datos es una opción más adecuada.
 
 El resultado de la gráfica coincide con lo calculado en la Parte 4.1. Insertion Sort tiene una complejidad promedio y de peor caso de Θ(n²), mientras que Merge Sort tiene una complejidad de Θ(n log n). En los tamaños pequeños puede haber poca diferencia entre ambos debido a factores del equipo y del tiempo de ejecución, pero cuando aumenta la cantidad de datos la diferencia se hace mucho más evidente. Por esto, según los resultados obtenidos en la gráfica, Merge Sort sería la mejor opción para Tamiza.
- 
- 
+
 **Merge Sort vs. Insertion Sort:**
- 
-![Comparaciones de insertion sort en los tres escenarios](graficas/parte4_tiempo.png)
+
+![Tiempo de ejecución de insertion sort y merge sort con datos aleatorios para n de 100 a 6.400](graficas/parte4_tiempo.png)
+
+Para esta gráfica usé los mismos tamaños de la Parte 3 (de 100 a 6.400) y el escenario aleatorio (A). Estos son los valores que medí con [parte4_complejidad.py](parte4_complejidad.py) (tomando el mínimo de 3 repeticiones):
+
+| n | Insertion sort | Merge sort | Insertion / Merge |
+|---:|---:|---:|---:|
+| 100 | 0,20 ms | 0,12 ms | ≈ 1,7× |
+| 200 | 0,80 ms | 0,25 ms | ≈ 3,2× |
+| 400 | 3,1 ms | 0,58 ms | ≈ 5,4× |
+| 800 | 13,0 ms | 1,3 ms | ≈ 10× |
+| 1.600 | 51,3 ms | 2,7 ms | ≈ 19× |
+| 3.200 | 0,211 s | 5,8 ms | ≈ 37× |
+| 6.400 | 0,837 s | 12,3 ms | ≈ 68× |
+
+**Tamaños pequeños.** Con n = 100 la diferencia es mínima: 0,20 ms contra 0,12 ms, menos de una décima de milisegundo, y en la gráfica las dos curvas se ven pegadas al cero. Esto pasa porque con tan pocos datos n² y n log n todavía dan números parecidos, y además merge sort tiene unos costos extra que insertion sort no tiene (las llamadas recursivas, crear las sublistas con `arreglo[:mitad]` y la lista `resultado`). Entonces, para listas muy pequeñas insertion sort funciona bastante bien, y por eso muchas implementaciones reales lo usan para los pedacitos pequeños dentro de un algoritmo más rápido.
+
+**Tamaños grandes.** Ya desde n = 800 merge sort es 10 veces más rápido, y cada vez que n se duplica la diferencia casi se duplica también: de 3.200 a 6.400, insertion sort pasó de 0,211 s a 0,837 s (casi ×4, cuadrático), mientras que merge sort pasó de 5,8 ms a 12,3 ms (como ×2,1, un poquito más que lineal, que es lo que da n log n). Esto es justo lo que dicen Θ(n²) y Θ(n log n) de la Parte 4.1.
+
+### 4.3 Concepto técnico
+
+**Recomendación.** Mi recomendación para la Secretaría es **cambiar insertion sort por merge sort** en el proceso de la madrugada de Tamiza, y hacerlo **antes** de pensar en comprar el servidor.
+
+**¿Sirve de algo comprar un servidor el doble de rápido?** La verdad, no soluciona el problema. Con lo que medí puedo estimar cuánto se demoraría cada algoritmo con 1.200.000 registros. Eso sí, **esto es una extrapolación, no una medición**: estoy suponiendo que el crecimiento sigue igual que en mis mediciones, y son tiempos de Python en mi computador, no en el servidor de Tamiza.
+
+- **Insertion sort (caso promedio):** si T(n) crece como n², el tiempo con 1.200.000 registros es el que medí con 6.400 multiplicado por (1.200.000 / 6.400)² = 187,5² ≈ 35.156:
+
+  ```text
+  0,837 s × 35.156 ≈ 29.400 s ≈ 8,2 horas
+  ```
+
+  En el peor caso (orden inverso, que en la Parte 3 dio 1,67 s con n = 6.400) serían unos 58.600 s, o sea, **16,3 horas**.
+
+- **Con un servidor el doble de rápido:** los tiempos se parten a la mitad y quedan en unas **4,1 horas** en el caso promedio y unas **8,1 horas** en el peor caso. Los dos siguen **pasándose de la ventana de 4 horas**. Y como el crecimiento es cuadrático, con que los registros crezcan apenas un 42 % (√2 ≈ 1,41) el tiempo se vuelve a duplicar y se pierde todo lo que se ganó con la compra.
+
+- **Merge sort:** si T(n) crece como n log n, el factor por el que hay que multiplicar es (1.200.000 · log₂ 1.200.000) / (6.400 · log₂ 6.400) ≈ 187,5 × (20,2 / 12,6) ≈ 300:
+
+  ```text
+  12,3 ms × 300 ≈ 3,7 s
+  ```
+
+  O sea, unos **4 segundos** con el servidor que ya tienen, sin comprar nada, y con muchísimo margen frente a las 4 horas aunque los registros sigan creciendo.
+
+**Otras cosas a tener en cuenta:**
+
+- **Memoria:** merge sort no ordena "en el mismo lugar"; necesita memoria extra Θ(n) para las sublistas y para unirlas, mientras que insertion sort solo necesita Θ(1) extra. Con 1.200.000 registros esto se puede manejar (estamos hablando de decenas de MB si se guardan los registros completos o referencias a ellos), pero toca verificar que el servidor tenga esa memoria libre durante la ventana.
+- **Estabilidad:** merge sort, como lo implementé (con `<=` al unir), es **estable**: si dos pacientes tienen el mismo índice de riesgo, quedan en el mismo orden en que llegaron. Para Tamiza esto es importante porque deja definir un criterio de desempate justo y que no cambie (lo de la tensión ética de la Parte 2). Eso sí, si se quiere conservar ese desempate, es mejor ordenar directamente de mayor a menor (cambiando la comparación) en vez de darle la vuelta a la lista al final.
+- **Que sea predecible:** merge sort es Θ(n log n) en el mejor, en el promedio y en el peor caso, entonces su tiempo no depende de cómo lleguen los datos. Insertion sort solo es rápido si los datos ya vienen casi ordenados, y eso Tamiza no lo puede garantizar.
